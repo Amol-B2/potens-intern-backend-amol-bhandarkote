@@ -26,7 +26,9 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.apartmentrecommendation.entity.Apartment;
+import com.apartmentrecommendation.entity.Subscription;
 import com.apartmentrecommendation.repository.ApartmentRepository;
+import com.apartmentrecommendation.repository.SubscriptionRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 @SpringBootTest(properties = "app.admin.token=test-admin-token")
@@ -42,9 +44,14 @@ class ApiControllerTest {
     @MockBean
     private ApartmentRepository apartmentRepository;
 
+    @MockBean
+    private SubscriptionRepository subscriptionRepository;
+
     @BeforeEach
     void setUp() {
         Mockito.reset(apartmentRepository);
+        Mockito.reset(subscriptionRepository);
+        when(subscriptionRepository.findAll()).thenReturn(List.of());
     }
 
     @Test
@@ -104,6 +111,33 @@ class ApiControllerTest {
         mockMvc.perform(get("/items"))
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.message").value("Unauthorized"));
+    }
+
+    @Test
+    void subscribeShouldCreateProfileWebhookSubscription() throws Exception {
+        when(subscriptionRepository.save(any(Subscription.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        String requestBody = """
+                {
+                  "webhookUrl": "https://example.com/webhook",
+                  "profile": {
+                    "budgetMax": 1800,
+                    "familySize": 3,
+                    "city": "Austin",
+                    "moveInDate": "2026-08-01",
+                    "hasPets": true,
+                    "amenitiesWanted": ["parking", "gym"],
+                    "incomeMonthly": 6000
+                  }
+                }
+                """;
+
+        mockMvc.perform(post("/subscribe")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestBody))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.subscriptionId").isNotEmpty())
+                .andExpect(jsonPath("$.message").value("Subscription created"));
     }
 
     @Test

@@ -14,9 +14,11 @@ import com.apartmentrecommendation.repository.ApartmentRepository;
 public class ItemService {
 
     private final ApartmentRepository apartmentRepository;
+    private final WebhookNotificationService webhookNotificationService;
 
-    public ItemService(ApartmentRepository apartmentRepository) {
+    public ItemService(ApartmentRepository apartmentRepository, WebhookNotificationService webhookNotificationService) {
         this.apartmentRepository = apartmentRepository;
+        this.webhookNotificationService = webhookNotificationService;
     }
 
     public List<Apartment> findAll() {
@@ -30,7 +32,9 @@ public class ItemService {
 
     @CacheEvict(cacheNames = CacheConfig.RECOMMENDATIONS_CACHE, allEntries = true)
     public Apartment create(Apartment apartment) {
-        return apartmentRepository.save(apartment);
+        Apartment savedApartment = apartmentRepository.save(apartment);
+        webhookNotificationService.notifyMatchingSubscribers(savedApartment);
+        return savedApartment;
     }
 
     @CacheEvict(cacheNames = CacheConfig.RECOMMENDATIONS_CACHE, allEntries = true)

@@ -21,6 +21,7 @@ Spring Boot API that accepts a renter profile and returns the top apartment matc
 - `/items` provides admin-protected CRUD over the apartment catalogue.
 - The database is seeded on startup with 16 apartment listings across multiple cities.
 - Repeated recommendation requests are cached for 5 minutes.
+- `/subscribe` stores a profile webhook and notifies it when a newly added apartment matches.
 
 ## How To Run
 
@@ -82,6 +83,7 @@ H2 connection values:
 
 - `POST /recommend`
 - `GET /explain/{itemId}`
+- `POST /subscribe`
 
 ### Admin Endpoints
 
@@ -110,6 +112,37 @@ x-admin-token: your-token-here
   "hasPets": true,
   "amenitiesWanted": ["parking", "gym"],
   "incomeMonthly": 6000
+}
+```
+
+### Subscribe Request
+
+```json
+{
+  "webhookUrl": "https://example.com/my-webhook",
+  "profile": {
+    "budgetMax": 1800,
+    "familySize": 3,
+    "city": "Austin",
+    "moveInDate": "2026-08-01",
+    "hasPets": true,
+    "amenitiesWanted": ["parking", "gym"],
+    "incomeMonthly": 6000
+  }
+}
+```
+
+When a newly created apartment matches a saved subscription, the app posts this shape to the subscriber's `webhookUrl`:
+
+```json
+{
+  "subscriptionId": "sub-id",
+  "matchedItemId": "apt_017",
+  "title": "Austin Garden Flat",
+  "city": "Austin",
+  "rentMonthly": 1650.00,
+  "matchScore": 0.812345,
+  "reason": "This apartment matches because ..."
 }
 ```
 
@@ -191,6 +224,7 @@ This keeps the ranking from collapsing into a simple "cheapest apartment wins" s
 - Amenities are stored as an element collection so each apartment can have flexible amenity lists without extra entity complexity.
 - Recommendation results are cached with a 5-minute TTL because profile requests are likely to repeat during demos and manual testing.
 - The recommendation cache is evicted whenever an admin creates, updates, or deletes an apartment so catalogue changes do not leave stale rankings around for long.
+- Webhook notifications are triggered only for newly created apartments, and failures are logged without failing the admin create request.
 
 ## Test Coverage
 
@@ -212,16 +246,14 @@ All tests pass on Java 21 via `./mvnw test`.
 
 - The admin token supports `ADMIN_TOKEN`, with a local fallback in `application.properties` for easy demos.
 - The project includes OpenAPI support through Swagger UI, but no custom API descriptions or tags were added.
-- The remaining optional stretch goals were not implemented:
-  - subscribe webhook
-  - extra OpenAPI customization beyond auto exposure
+- Custom OpenAPI descriptions and tags were not added beyond auto exposure.
 
 ## What I Would Build Next
 
 - add response models for admin CRUD instead of exposing the entity directly
 - add custom OpenAPI documentation for each endpoint
 - add pagination or filtering support to `/items`
-- add a subscription feature for profile-based listing alerts
+- add retry/backoff and delivery history for webhook notifications
 
 ## Project Structure
 
