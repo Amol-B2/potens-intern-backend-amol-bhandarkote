@@ -10,6 +10,7 @@ Spring Boot API that accepts a renter profile and returns the top apartment matc
 - Spring Data JPA
 - Spring Security
 - H2 in-memory database
+- Caffeine cache
 - springdoc OpenAPI / Swagger UI
 - JUnit + Spring Boot Test
 
@@ -19,6 +20,7 @@ Spring Boot API that accepts a renter profile and returns the top apartment matc
 - `GET /explain/{itemId}` returns the eligibility logic for a single apartment in plain language.
 - `/items` provides admin-protected CRUD over the apartment catalogue.
 - The database is seeded on startup with 16 apartment listings across multiple cities.
+- Repeated recommendation requests are cached for 5 minutes.
 
 ## How To Run
 
@@ -29,13 +31,13 @@ Spring Boot API that accepts a renter profile and returns the top apartment matc
 
 ### Configuration
 
-Update the admin token in [`src/main/resources/application.properties`](src/main/resources/application.properties):
+Update the admin token in [`src/main/resources/application.properties`](src/main/resources/application.properties) or set `ADMIN_TOKEN` in your environment:
 
 ```properties
-app.admin.token=change-me-admin-token
+app.admin.token=${ADMIN_TOKEN:change-me-admin-token}
 ```
 
-Replace it with your own value before testing admin routes.
+Replace the fallback value or set `ADMIN_TOKEN` before testing admin routes.
 
 ### Start the Application
 
@@ -187,6 +189,8 @@ This keeps the ranking from collapsing into a simple "cheapest apartment wins" s
 - Explanation text is generated from rule outcomes and apartment attributes rather than being handwritten per listing.
 - Admin protection uses a simple `x-admin-token` header because the assignment only requires token protection, not a full auth system.
 - Amenities are stored as an element collection so each apartment can have flexible amenity lists without extra entity complexity.
+- Recommendation results are cached with a 5-minute TTL because profile requests are likely to repeat during demos and manual testing.
+- The recommendation cache is evicted whenever an admin creates, updates, or deletes an apartment so catalogue changes do not leave stale rankings around for long.
 
 ## Test Coverage
 
@@ -206,20 +210,17 @@ All tests pass on Java 21 via `./mvnw test`.
 
 ## Known Limitations / Next Steps
 
-- The admin token is stored in `application.properties` for simplicity. In a production-ready version, this should come from environment variables or secrets management.
+- The admin token supports `ADMIN_TOKEN`, with a local fallback in `application.properties` for easy demos.
 - The project includes OpenAPI support through Swagger UI, but no custom API descriptions or tags were added.
-- The optional stretch goals were not implemented:
+- The remaining optional stretch goals were not implemented:
   - subscribe webhook
-  - caching layer
   - extra OpenAPI customization beyond auto exposure
 
 ## What I Would Build Next
 
-- move the admin token into environment-based configuration
 - add response models for admin CRUD instead of exposing the entity directly
 - add custom OpenAPI documentation for each endpoint
 - add pagination or filtering support to `/items`
-- add caching for repeated recommendation requests
 - add a subscription feature for profile-based listing alerts
 
 ## Project Structure

@@ -2,8 +2,10 @@ package com.apartmentrecommendation.service;
 
 import java.util.List;
 
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 
+import com.apartmentrecommendation.config.CacheConfig;
 import com.apartmentrecommendation.entity.Apartment;
 import com.apartmentrecommendation.exception.ResourceNotFoundException;
 import com.apartmentrecommendation.repository.ApartmentRepository;
@@ -26,10 +28,12 @@ public class ItemService {
                 .orElseThrow(() -> new ResourceNotFoundException("Apartment not found for id: " + itemId));
     }
 
+    @CacheEvict(cacheNames = CacheConfig.RECOMMENDATIONS_CACHE, allEntries = true)
     public Apartment create(Apartment apartment) {
         return apartmentRepository.save(apartment);
     }
 
+    @CacheEvict(cacheNames = CacheConfig.RECOMMENDATIONS_CACHE, allEntries = true)
     public Apartment update(String itemId, Apartment request) {
         Apartment apartment = findById(itemId);
         apartment.setTitle(request.getTitle());
@@ -44,6 +48,7 @@ public class ItemService {
         return apartmentRepository.save(apartment);
     }
 
+    @CacheEvict(cacheNames = CacheConfig.RECOMMENDATIONS_CACHE, allEntries = true)
     public void delete(String itemId) {
         Apartment apartment = findById(itemId);
         apartmentRepository.delete(apartment);

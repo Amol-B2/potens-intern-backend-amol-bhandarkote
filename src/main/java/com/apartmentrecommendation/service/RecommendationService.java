@@ -3,8 +3,10 @@ package com.apartmentrecommendation.service;
 import java.util.Comparator;
 import java.util.List;
 
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
+import com.apartmentrecommendation.config.CacheConfig;
 import com.apartmentrecommendation.dto.ApartmentMatchResponse;
 import com.apartmentrecommendation.dto.ItemExplanationResponse;
 import com.apartmentrecommendation.dto.RecommendationRequest;
@@ -32,6 +34,9 @@ public class RecommendationService {
         this.explanationService = explanationService;
     }
 
+    @Cacheable(
+            cacheNames = CacheConfig.RECOMMENDATIONS_CACHE,
+            key = "T(com.apartmentrecommendation.config.RecommendationCacheKey).from(#profile)")
     public RecommendationResponse recommend(RecommendationRequest profile) {
         List<ApartmentMatchResponse> matches = apartmentRepository.findAll().stream()
                 .filter(apartment -> eligibilityService.isEligible(apartment, profile))
