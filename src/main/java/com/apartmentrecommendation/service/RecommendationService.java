@@ -6,9 +6,11 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 
 import com.apartmentrecommendation.dto.ApartmentMatchResponse;
+import com.apartmentrecommendation.dto.ItemExplanationResponse;
 import com.apartmentrecommendation.dto.RecommendationRequest;
 import com.apartmentrecommendation.dto.RecommendationResponse;
 import com.apartmentrecommendation.entity.Apartment;
+import com.apartmentrecommendation.exception.ResourceNotFoundException;
 import com.apartmentrecommendation.repository.ApartmentRepository;
 
 @Service
@@ -61,7 +63,10 @@ public class RecommendationService {
         return match;
     }
 
-    public String explainItem(Apartment apartment) {
-        return explanationService.buildItemExplanation(apartment);
+    public ItemExplanationResponse explainItem(String itemId) {
+        Apartment apartment = apartmentRepository.findById(itemId)
+                .orElseThrow(() -> new ResourceNotFoundException("Apartment not found for id: " + itemId));
+
+        return new ItemExplanationResponse(apartment.getId(), explanationService.buildItemExplanation(apartment));
     }
 }
