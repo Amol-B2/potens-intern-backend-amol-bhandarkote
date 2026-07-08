@@ -29,7 +29,7 @@ Spring Boot API that accepts a renter profile and returns the top apartment matc
 
 ### Configuration
 
-Update the admin token in [application.properties](/O:/Apartment-Recommendation-System/src/main/resources/application.properties):
+Update the admin token in [`src/main/resources/application.properties`](src/main/resources/application.properties):
 
 ```properties
 app.admin.token=change-me-admin-token
@@ -45,13 +45,23 @@ Using Maven:
 mvn spring-boot:run
 ```
 
-Or using the wrapper:
+Using the wrapper:
 
 ```bash
+# macOS / Linux
+./mvnw spring-boot:run
+
+# Windows
 mvnw.cmd spring-boot:run
 ```
 
 Or run `ApartmentRecommendationSystemApplication` directly from IntelliJ.
+
+### Running Tests
+
+```bash
+./mvnw test
+```
 
 ### Default Local URLs
 
@@ -167,7 +177,7 @@ Scoring formulas:
 - `amenityOverlap = matchedWantedAmenities / totalWantedAmenities`
 - `spaceBuffer = min((maxOccupancy - familySize) / familySize, 1)`
 
-This keeps the ranking from collapsing into a simple “cheapest apartment wins” sort.
+This keeps the ranking from collapsing into a simple "cheapest apartment wins" sort.
 
 ## Design Decisions
 
@@ -192,10 +202,10 @@ Implemented test areas include:
 - admin-token protection
 - authenticated CRUD happy path
 
-## What Is Unfinished Or Broken
+All tests pass on Java 21 via `./mvnw test`.
 
-- I could not fully verify execution in this workspace during development because the local environment was still configured with Java 8 while the project requires Java 21.
-- The README reflects the intended runtime behavior, but final manual verification should be done on a Java 21 setup.
+## Known Limitations / Next Steps
+
 - The admin token is stored in `application.properties` for simplicity. In a production-ready version, this should come from environment variables or secrets management.
 - The project includes OpenAPI support through Swagger UI, but no custom API descriptions or tags were added.
 - The optional stretch goals were not implemented:
@@ -208,7 +218,6 @@ Implemented test areas include:
 - move the admin token into environment-based configuration
 - add response models for admin CRUD instead of exposing the entity directly
 - add custom OpenAPI documentation for each endpoint
-- add integration tests against a full Java 21 runtime
 - add pagination or filtering support to `/items`
 - add caching for repeated recommendation requests
 - add a subscription feature for profile-based listing alerts
@@ -224,12 +233,6 @@ src/main/java/com/apartmentrecommendation
   exception/
   repository/
   service/
-```
-
-## Suggested Final Commit
-
-```text
-docs: add README with setup notes design decisions and ai use log
 ```
 
 ## AI USE LOG
